@@ -1,0 +1,19 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    "zai-coding-plan": {
+      "name": "Z.AI Coding Plan",
+      "options": {
+        "baseURL": "https://api.z.ai/api/coding/paas/v4",
+        // Get your API key from https://api.z.ai
+        "apiKey": "YOUR_ZAI_API_KEY_HERE"
+      },
+      "models": {
+        "glm-4.7": {
+          "name": "glm-4.7"
+        }
+      }
+    }
+  },
+  "model": "zai-coding-plan/glm-4.7"
+}

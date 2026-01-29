@@ -2,6 +2,9 @@
 .env
 .env.local
 
+# OpenCode config (contains API keys)
+opencode.jsonc
+
 # macOS
 .DS_Store
 
