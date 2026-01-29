@@ -175,42 +175,52 @@ async def health_check():
     return {"status": "ok", "bot_token_set": bool(BOT_TOKEN)}
 
 
-# ===== 기본 메시지 핸들러 예시 =====
+# ===== OpenCode 핸들러 =====
 
 @on_message
-async def echo_handler(msg: dict) -> Optional[str]:
-    """에코 핸들러 - 받은 메시지를 그대로 반환"""
+async def opencode_handler(msg: dict) -> Optional[str]:
+    """OpenCode로 /user-action 실행"""
     text = msg.get("text", "")
 
-    # /start 명령어
+    # 빈 메시지 무시
+    if not text:
+        return None
+
+    # /start, /help는 기본 응답
     if text == "/start":
-        return "안녕하세요! 무엇을 도와드릴까요?"
+        return "안녕하세요! 메시지를 보내주시면 AI가 답변해드립니다."
 
-    # /help 명령어
     if text == "/help":
-        return """사용 가능한 명령어:
-/start - 시작
-/help - 도움말
-/echo <메시지> - 에코"""
+        return "메시지를 보내주시면 AI가 분석하여 답변해드립니다."
 
-    # /echo 명령어
-    if text.startswith("/echo "):
-        return text[6:]
+    # 일반 메시지 → OpenCode 실행
+    print(f"\n>>> OpenCode 실행: /user-action")
 
-    # 일반 메시지는 에코
-    if text and not text.startswith("/"):
-        return f"받은 메시지: {text}"
+    try:
+        process = await asyncio.create_subprocess_exec(
+            "opencode", "run", "/user-action", "-m", "zai-coding-plan/glm-4.7",
+            cwd=str(PROJECT_ROOT),
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
 
+        stdout, stderr = await asyncio.wait_for(
+            process.communicate(),
+            timeout=300.0  # 5분 타임아웃
+        )
+
+        if process.returncode == 0:
+            print(f">>> OpenCode 완료")
+        else:
+            print(f">>> OpenCode 에러: {stderr.decode()}")
+
+    except asyncio.TimeoutError:
+        print(">>> OpenCode 타임아웃")
+    except Exception as e:
+        print(f">>> OpenCode 실행 실패: {e}")
+
+    # OpenCode가 직접 send_telegram.py로 응답하므로 여기선 None 반환
     return None
-
-
-# ===== 커스텀 핸들러 추가 예시 =====
-# @on_message
-# async def custom_handler(msg: dict) -> Optional[str]:
-#     text = msg.get("text", "")
-#     if "안녕" in text:
-#         return "안녕하세요!"
-#     return None
 
 
 def main():

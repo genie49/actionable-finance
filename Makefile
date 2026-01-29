@@ -50,9 +50,9 @@ ifndef MSG
 endif
 	uv run python scripts/send_telegram.py "$(MSG)"
 
-# 봇 메시지 조회
+# 봇 대화 히스토리 조회
 collect:
-	uv run python .claude/skills/user-action/scripts/get_bot_messages.py --json
+	uv run python .opencode/skills/user-action/scripts/get_bot_messages.py
 
 # AI에게 질문
 ask:
