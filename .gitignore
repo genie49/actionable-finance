@@ -1,0 +1,23 @@
+# Environment
+.env
+.env.local
+
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+
+# Telegram session
+*.session
+*.session-journal
+
+# Telegram targets config (contains personal group info)
+telegram-targets.json
+
+# Collected messages (keep folder, ignore content)
+collected_messages/*.md

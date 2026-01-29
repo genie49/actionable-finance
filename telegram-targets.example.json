@@ -1,0 +1,25 @@
+{
+  "targets": [
+    {
+      "id": -1001234567890,
+      "name": "My Crypto Group",
+      "type": "supergroup",
+      "username": "mycryptogroup",
+      "enabled": true
+    },
+    {
+      "id": -1009876543210,
+      "name": "Trading Signals",
+      "type": "channel",
+      "username": "tradingsignals",
+      "enabled": true
+    },
+    {
+      "id": -1001111111111,
+      "name": "비활성화된 그룹",
+      "type": "group",
+      "username": null,
+      "enabled": false
+    }
+  ]
+}
