@@ -1,23 +1,8 @@
 services:
-  webhook:
+  app:
     build: .
-    container_name: telegram-webhook
+    container_name: actionable-finance
     restart: always
     env_file:
       - .env
-    expose:
-      - "8000"
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 10s
-
-  cloudflared:
-    image: cloudflare/cloudflared:latest
-    container_name: cloudflared-tunnel
-    restart: always
-    command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TUNNEL_TOKEN}
-    depends_on:
-      - webhook
+    # 포트 노출 안함 (Cloudflare Tunnel로만 접근)
