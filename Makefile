@@ -34,7 +34,7 @@ install:
 
 # 웹훅 서버 실행 (로컬 모드)
 server:
-	uv run python scripts/telegram_webhook.py --local --port $(PORT)
+	uv run python -m app.main --host 0.0.0.0 --port $(PORT)
 
 # Cloudflare Quick Tunnel 실행
 tunnel:
@@ -45,11 +45,11 @@ webhook:
 ifndef URL
 	$(error URL이 필요합니다. 예: make webhook URL=https://xxx.trycloudflare.com)
 endif
-	uv run python scripts/telegram_webhook.py --webhook-url $(URL)/webhook
+	uv run python -m app.main --webhook-url $(URL)/webhook
 
 # 웹훅 삭제
 webhook-delete:
-	uv run python scripts/telegram_webhook.py --delete-webhook
+	uv run python -m app.main --delete-webhook
 
 # 메시지 전송
 send:

@@ -22,6 +22,7 @@ COPY pyproject.toml uv.lock ./
 RUN uv sync --frozen --no-dev
 
 # 소스 복사
+COPY app/ ./app/
 COPY scripts/ ./scripts/
 COPY .opencode/ ./.opencode/
 COPY opencode.jsonc.template ./

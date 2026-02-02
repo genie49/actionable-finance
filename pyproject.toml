@@ -11,6 +11,7 @@ dependencies = [
     "uvicorn>=0.32.0",
     "telethon>=1.37.0",
     "pyupbit>=0.2.33",
+    "apscheduler>=3.10.0",
 ]
 
 [dependency-groups]
