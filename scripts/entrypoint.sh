@@ -32,4 +32,4 @@ trap cleanup SIGTERM SIGINT
 # 웹서버 실행 (localhost만 - 외부 직접 접근 차단)
 # Cloudflare Tunnel이 localhost:8000으로 트래픽 전달
 echo "Starting uvicorn on localhost:8000 (internal only)..."
-exec uv run uvicorn scripts.telegram_webhook:app --host 127.0.0.1 --port 8000
+exec uv run uvicorn app.main:app --host 127.0.0.1 --port 8000
