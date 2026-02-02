@@ -3,7 +3,6 @@ builder = "dockerfile"
 dockerfilePath = "Dockerfile"
 
 [deploy]
-healthcheckPath = "/health"
-healthcheckTimeout = 30
+# healthcheck 비활성화 (포트 미노출, Cloudflare Tunnel 사용)
 restartPolicyType = "on_failure"
 restartPolicyMaxRetries = 3
