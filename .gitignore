@@ -19,8 +19,8 @@ venv/
 *.session
 *.session-journal
 
-# Telegram targets config (contains personal group info)
-telegram-targets.json
+# Telegram targets config (example file committed, personal config ignored)
+# telegram-targets.json
 
 # Collected messages (keep folder, ignore content)
 collected_messages/*.md

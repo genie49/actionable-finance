@@ -1,0 +1,39 @@
+{
+  "targets": [
+    {
+      "id": -1001386345244,
+      "name": "COINNESS News Feed (코인니스)",
+      "type": "channel",
+      "username": "coinnesskr",
+      "enabled": true
+    },
+    {
+      "id": -1002472817199,
+      "name": "매경 자이앤트| MK",
+      "type": "channel",
+      "username": "mk_giant",
+      "enabled": true
+    },
+    {
+      "id": -1001586367974,
+      "name": "급등일보 미국주식🇺🇸 속보·리서치",
+      "type": "channel",
+      "username": "FastStockNewsUSA",
+      "enabled": true
+    },
+    {
+      "id": -1001488156064,
+      "name": "Bloomberg",
+      "type": "channel",
+      "username": "bloomberg",
+      "enabled": true
+    },
+    {
+      "id": -1001768167577,
+      "name": "Macro Jungle | micro lens",
+      "type": "channel",
+      "username": "Macrojunglemicrolens",
+      "enabled": true
+    }
+  ]
+}

@@ -22,14 +22,17 @@ RUN uv sync --frozen --no-dev
 # 소스 복사
 COPY scripts/ ./scripts/
 COPY .opencode/ ./.opencode/
-COPY opencode.jsonc ./
+COPY opencode.jsonc.template ./
 COPY telegram-targets.json ./
 COPY AGENTS.md ./
+
+# entrypoint 실행 권한
+RUN chmod +x /app/scripts/entrypoint.sh
 
 # 환경변수
 ENV PYTHONUNBUFFERED=1
 
 EXPOSE 8000
 
-# FastAPI 서버 실행
-CMD ["uv", "run", "uvicorn", "scripts.telegram_webhook:app", "--host", "0.0.0.0", "--port", "8000"]
+# entrypoint로 실행 (환경변수에서 config 생성 후 서버 시작)
+ENTRYPOINT ["/app/scripts/entrypoint.sh"]
