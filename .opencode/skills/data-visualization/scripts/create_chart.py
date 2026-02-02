@@ -91,6 +91,7 @@ def create_chart(
     macd: bool = False,
     rsi: bool = False,
     volume: bool = False,
+    hlines: list[dict] | None = None,
     output: str | None = None,
 ) -> str:
     """캔들차트 이미지 생성
@@ -103,6 +104,7 @@ def create_chart(
         macd: MACD 표시 여부
         rsi: RSI 표시 여부
         volume: 거래량 표시 여부
+        hlines: 수평선 리스트 (예: [{"price": 50000000, "color": "red", "label": "평단가"}])
         output: 출력 파일 경로 (없으면 임시 파일)
 
     Returns:
@@ -181,6 +183,19 @@ def create_chart(
             mpf.make_addplot([30] * count, panel=next_panel, color="#26A69A", linestyle="--", width=0.5),
         ])
 
+    # 수평선 (가격선)
+    if hlines:
+        for line in hlines:
+            price = line.get("price")
+            color = line.get("color", "#FF9800")  # 기본 주황색
+            if price:
+                add_plots.append(mpf.make_addplot(
+                    [price] * len(df_full.tail(count)),
+                    color=color,
+                    linestyle="--",
+                    width=1.5,
+                ))
+
     # 표시할 데이터만 자르기 (지표 계산 후)
     df = df_full.tail(count)
 
@@ -255,6 +270,22 @@ def create_chart(
         ma_text = "MA: " + ", ".join([f"{p}" for p in ma])
         fig.text(0.01, 0.01, ma_text, ha="left", va="bottom", fontsize=9, color="gray")
 
+    # 수평선 가격 라벨 추가
+    if hlines:
+        ax = axes[0]
+        for line in hlines:
+            price = line.get("price")
+            color = line.get("color", "#FF9800")
+            if price:
+                ax.annotate(
+                    f"{price:,.0f}",
+                    xy=(1.01, price),
+                    xycoords=("axes fraction", "data"),
+                    fontsize=8,
+                    color=color,
+                    va="center",
+                )
+
     # 저장
     fig.savefig(output_path, dpi=150, bbox_inches="tight", facecolor="white")
     plt.close(fig)
@@ -298,6 +329,12 @@ def main():
         help="거래량 표시",
     )
     parser.add_argument(
+        "--line", "-l",
+        type=str,
+        action="append",
+        help="수평선 (가격:색상:라벨, 예: 50000000:red:평단가)",
+    )
+    parser.add_argument(
         "--output", "-o",
         type=str,
         default=None,
@@ -320,6 +357,21 @@ def main():
             print("Error: --ma 옵션은 쉼표로 구분된 숫자여야 합니다 (예: 5,20,60)", file=sys.stderr)
             sys.exit(1)
 
+    # 수평선 파싱
+    hlines = None
+    if args.line:
+        hlines = []
+        for line_str in args.line:
+            parts = line_str.split(":")
+            try:
+                price = float(parts[0])
+                color = parts[1] if len(parts) > 1 else "#FF9800"
+                label = parts[2] if len(parts) > 2 else ""
+                hlines.append({"price": price, "color": color, "label": label})
+            except (ValueError, IndexError):
+                print(f"Error: --line 형식 오류: {line_str} (예: 50000000:red:평단가)", file=sys.stderr)
+                sys.exit(1)
+
     try:
         output_path = create_chart(
             symbol=args.symbol,
@@ -329,6 +381,7 @@ def main():
             macd=args.macd,
             rsi=args.rsi,
             volume=args.volume,
+            hlines=hlines,
             output=args.output,
         )
         print(f"차트 생성 완료: {output_path}")

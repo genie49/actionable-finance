@@ -72,6 +72,7 @@ uv run python .opencode/skills/data-visualization/scripts/create_chart.py BTC -i
 | `-v, --volume` | 거래량 표시 | 없음 |
 | `--macd` | MACD 지표 표시 | 없음 |
 | `--rsi` | RSI 지표 표시 | 없음 |
+| `-l, --line` | 수평선 (가격:색상:라벨) | 없음 |
 | `-o, --output` | 출력 파일 경로 | 임시 파일 |
 
 ### 봉 간격 옵션
@@ -113,4 +114,10 @@ uv run python .opencode/skills/data-visualization/scripts/send_chart.py ETH -i 1
 
 # "XRP 4시간봉 RSI 포함해서 보여줘"
 uv run python .opencode/skills/data-visualization/scripts/send_chart.py XRP -i 4h --rsi
+
+# "비트코인 차트에 평단가 140,000,000원 표시해줘"
+uv run python .opencode/skills/data-visualization/scripts/send_chart.py BTC -i 1d --line "140000000:red:평단가"
+
+# 여러 수평선 (평단가 + 목표가)
+uv run python .opencode/skills/data-visualization/scripts/send_chart.py BTC --line "140000000:red:평단가" --line "150000000:green:목표가"
 ```

@@ -96,6 +96,12 @@ def main():
         help="거래량 표시",
     )
     parser.add_argument(
+        "--line", "-l",
+        type=str,
+        action="append",
+        help="수평선 (가격:색상:라벨, 예: 50000000:red:평단가)",
+    )
+    parser.add_argument(
         "--chat-id",
         type=str,
         help="Chat ID (기본: 환경변수)",
@@ -130,6 +136,21 @@ def main():
             print("Error: --ma 옵션은 쉼표로 구분된 숫자여야 합니다", file=sys.stderr)
             sys.exit(1)
 
+    # 수평선 파싱
+    hlines = None
+    if args.line:
+        hlines = []
+        for line_str in args.line:
+            parts = line_str.split(":")
+            try:
+                price = float(parts[0])
+                color = parts[1] if len(parts) > 1 else "#FF9800"
+                label = parts[2] if len(parts) > 2 else ""
+                hlines.append({"price": price, "color": color, "label": label})
+            except (ValueError, IndexError):
+                print(f"Error: --line 형식 오류: {line_str}", file=sys.stderr)
+                sys.exit(1)
+
     try:
         # 차트 생성
         print(f"차트 생성 중... ({args.symbol} {args.interval})")
@@ -141,6 +162,7 @@ def main():
             macd=args.macd,
             rsi=args.rsi,
             volume=args.volume,
+            hlines=hlines,
         )
         print(f"차트 생성 완료: {output_path}")
 
@@ -158,6 +180,12 @@ def main():
             caption_parts.append("MACD")
         if args.rsi:
             caption_parts.append("RSI")
+        if hlines:
+            for line in hlines:
+                label = line.get("label", "")
+                price = line.get("price", 0)
+                if label:
+                    caption_parts.append(f"{label}: {price:,.0f}")
 
         caption = "\n".join(caption_parts)
 
