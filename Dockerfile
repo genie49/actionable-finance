@@ -2,10 +2,12 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
-# 필수 패키지 설치
+# 필수 패키지 설치 + cloudflared
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     ca-certificates \
+    && curl -fsSL https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 -o /usr/local/bin/cloudflared \
+    && chmod +x /usr/local/bin/cloudflared \
     && rm -rf /var/lib/apt/lists/*
 
 # opencode 설치
@@ -32,7 +34,8 @@ RUN chmod +x /app/scripts/entrypoint.sh
 # 환경변수
 ENV PYTHONUNBUFFERED=1
 
-EXPOSE 8000
+# 포트 노출 안함 (Cloudflare Tunnel로만 접근)
+# EXPOSE 8000
 
-# entrypoint로 실행 (환경변수에서 config 생성 후 서버 시작)
+# entrypoint로 실행 (cloudflared + uvicorn)
 ENTRYPOINT ["/app/scripts/entrypoint.sh"]

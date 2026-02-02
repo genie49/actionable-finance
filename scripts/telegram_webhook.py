@@ -60,6 +60,8 @@ if not BOT_TOKEN:
     print("Error: TELEGRAM_BOT_TOKEN이 필요합니다.")
     sys.exit(1)
 
+WEBHOOK_SECRET = os.environ.get("TELEGRAM_WEBHOOK_SECRET")
+
 # FastAPI 앱
 app = FastAPI(title="Telegram Webhook Bot")
 
@@ -120,16 +122,22 @@ async def send_message(chat_id: int, text: str, parse_mode: str = "Markdown") ->
         return data.get("ok", False)
 
 
-async def set_webhook(webhook_url: str) -> bool:
+async def set_webhook(webhook_url: str, secret_token: Optional[str] = None) -> bool:
     """텔레그램에 Webhook URL 등록"""
     url = f"https://api.telegram.org/bot{BOT_TOKEN}/setWebhook"
 
+    payload = {"url": webhook_url}
+    if secret_token:
+        payload["secret_token"] = secret_token
+
     async with httpx.AsyncClient() as client:
-        response = await client.post(url, json={"url": webhook_url})
+        response = await client.post(url, json=payload)
         data = response.json()
 
         if data.get("ok"):
             print(f"Webhook 설정 완료: {webhook_url}")
+            if secret_token:
+                print("Secret token 설정됨")
             return True
         else:
             print(f"Webhook 설정 실패: {data.get('description')}")
@@ -166,6 +174,13 @@ async def process_message(msg_info: dict):
 @app.post("/webhook")
 async def webhook_handler(request: Request, background_tasks: BackgroundTasks):
     """텔레그램 Webhook 엔드포인트"""
+    # Secret token 검증
+    if WEBHOOK_SECRET:
+        token = request.headers.get("X-Telegram-Bot-Api-Secret-Token")
+        if token != WEBHOOK_SECRET:
+            print(f"[보안] 잘못된 secret token: {token}")
+            raise HTTPException(status_code=403, detail="Forbidden")
+
     try:
         update = await request.json()
     except Exception:
@@ -318,7 +333,7 @@ def main():
         webhook_url = args.webhook_url
         if not webhook_url.endswith("/webhook"):
             webhook_url = webhook_url.rstrip("/") + "/webhook"
-        asyncio.run(set_webhook(webhook_url))
+        asyncio.run(set_webhook(webhook_url, WEBHOOK_SECRET))
         return  # 등록만 하고 종료
 
     print(f"\nBot 서버 시작: http://{args.host}:{args.port}")
