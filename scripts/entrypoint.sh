@@ -9,5 +9,5 @@ else
     echo "WARNING: ZAI_API_KEY not set, opencode may not work"
 fi
 
-# 서버 실행
-exec uv run uvicorn scripts.telegram_webhook:app --host 0.0.0.0 --port 8000
+# 서버 실행 (Railway는 PORT 환경변수 제공)
+exec uv run uvicorn scripts.telegram_webhook:app --host 0.0.0.0 --port ${PORT:-8000}
