@@ -28,7 +28,7 @@ except ImportError:
     sys.exit(1)
 
 try:
-    from fastapi import FastAPI, Request, HTTPException
+    from fastapi import FastAPI, Request, HTTPException, BackgroundTasks
     from fastapi.responses import JSONResponse
     import uvicorn
 except ImportError:
@@ -67,11 +67,23 @@ app = FastAPI(title="Telegram Webhook Bot")
 MessageHandler = Callable[[dict], Awaitable[Optional[str]]]
 _message_handlers: list[MessageHandler] = []
 
+# 중복 처리 방지용 (최근 처리한 update_id 저장)
+_processed_updates: set[int] = set()
+_MAX_PROCESSED_UPDATES = 1000
+
 
 def on_message(handler: MessageHandler):
     """메시지 핸들러 데코레이터"""
     _message_handlers.append(handler)
     return handler
+
+
+async def send_chat_action(chat_id: int, action: str = "typing") -> bool:
+    """타이핑 중 등의 액션 표시"""
+    url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendChatAction"
+    async with httpx.AsyncClient() as client:
+        response = await client.post(url, json={"chat_id": chat_id, "action": action})
+        return response.json().get("ok", False)
 
 
 async def send_message(chat_id: int, text: str, parse_mode: str = "Markdown") -> bool:
@@ -124,13 +136,44 @@ async def delete_webhook() -> bool:
         return data.get("ok", False)
 
 
+async def process_message(msg_info: dict):
+    """백그라운드에서 메시지 처리"""
+    chat_id = msg_info.get("chat_id")
+    
+    # 타이핑 표시
+    await send_chat_action(chat_id, "typing")
+    
+    # 등록된 핸들러 실행
+    for handler in _message_handlers:
+        try:
+            reply = await handler(msg_info)
+            if reply:
+                await send_message(chat_id, reply)
+        except Exception as e:
+            print(f"Handler error: {e}")
+
+
 @app.post("/webhook")
-async def webhook_handler(request: Request):
+async def webhook_handler(request: Request, background_tasks: BackgroundTasks):
     """텔레그램 Webhook 엔드포인트"""
     try:
         update = await request.json()
     except Exception:
         raise HTTPException(status_code=400, detail="Invalid JSON")
+
+    # 중복 처리 방지
+    update_id = update.get("update_id")
+    if update_id in _processed_updates:
+        print(f"[중복] update_id={update_id} 이미 처리됨, 스킵")
+        return JSONResponse({"ok": True})
+    
+    # 처리 완료 표시
+    _processed_updates.add(update_id)
+    if len(_processed_updates) > _MAX_PROCESSED_UPDATES:
+        # 오래된 항목 제거 (set은 순서가 없어서 일부만 제거)
+        to_remove = list(_processed_updates)[:_MAX_PROCESSED_UPDATES // 2]
+        for item in to_remove:
+            _processed_updates.discard(item)
 
     # 메시지 추출
     message = update.get("message")
@@ -143,7 +186,7 @@ async def webhook_handler(request: Request):
 
     # 메시지 정보 구성
     msg_info = {
-        "update_id": update.get("update_id"),
+        "update_id": update_id,
         "message_id": message.get("message_id"),
         "date": datetime.fromtimestamp(message.get("date", 0)).isoformat(),
         "chat_id": chat.get("id"),
@@ -157,14 +200,8 @@ async def webhook_handler(request: Request):
     # 콘솔 로그
     print(f"\n[{msg_info['date']}] {msg_info['from_name']}: {text}")
 
-    # 등록된 핸들러 실행
-    for handler in _message_handlers:
-        try:
-            reply = await handler(msg_info)
-            if reply:
-                await send_message(chat.get("id"), reply)
-        except Exception as e:
-            print(f"Handler error: {e}")
+    # 백그라운드에서 처리 (즉시 응답 반환)
+    background_tasks.add_task(process_message, msg_info)
 
     return JSONResponse({"ok": True})
 

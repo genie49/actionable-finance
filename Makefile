@@ -1,4 +1,5 @@
-.PHONY: install server tunnel webhook webhook-delete send collect ask help
+.PHONY: install server tunnel webhook webhook-delete send collect ask help \
+        docker-build docker-up docker-down docker-clean docker-logs
 
 # 기본 포트
 PORT ?= 8000
@@ -14,6 +15,13 @@ help:
 	@echo "  make send MSG=      - 메시지 전송"
 	@echo "  make collect        - 봇 메시지 조회"
 	@echo "  make ask Q=         - AI에게 질문"
+	@echo ""
+	@echo "Docker:"
+	@echo "  make docker-build   - Docker 이미지 빌드"
+	@echo "  make docker-up      - Docker 컨테이너 실행"
+	@echo "  make docker-down    - Docker 컨테이너 중지"
+	@echo "  make docker-clean   - Docker 정리 (컨테이너 + 이미지)"
+	@echo "  make docker-logs    - Docker 로그 확인"
 	@echo ""
 	@echo "예시:"
 	@echo "  make webhook URL=https://xxx.trycloudflare.com"
@@ -60,3 +68,25 @@ ifndef Q
 	$(error Q가 필요합니다. 예: make ask Q='너는 누구')
 endif
 	opencode run "$(Q)" -m "zai-coding-plan/glm-4.7"
+
+# ===== Docker =====
+
+# Docker 이미지 빌드
+docker-build:
+	docker-compose build
+
+# Docker 컨테이너 실행
+docker-up:
+	docker-compose up -d
+
+# Docker 컨테이너 중지
+docker-down:
+	docker-compose down
+
+# Docker 정리 (컨테이너 + 이미지)
+docker-clean:
+	docker-compose down --rmi local --volumes --remove-orphans
+
+# Docker 로그 확인
+docker-logs:
+	docker-compose logs -f
