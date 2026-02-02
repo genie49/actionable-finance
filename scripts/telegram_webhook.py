@@ -81,9 +81,19 @@ def on_message(handler: MessageHandler):
 async def send_chat_action(chat_id: int, action: str = "typing") -> bool:
     """타이핑 중 등의 액션 표시"""
     url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendChatAction"
-    async with httpx.AsyncClient() as client:
-        response = await client.post(url, json={"chat_id": chat_id, "action": action})
-        return response.json().get("ok", False)
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.post(url, json={"chat_id": chat_id, "action": action})
+            result = response.json()
+            ok = result.get("ok", False)
+            if ok:
+                print(f"[typing] chat_id={chat_id} 타이핑 표시 성공")
+            else:
+                print(f"[typing] chat_id={chat_id} 실패: {result}")
+            return ok
+    except Exception as e:
+        print(f"[typing] chat_id={chat_id} 에러: {e}")
+        return False
 
 
 async def send_message(chat_id: int, text: str, parse_mode: str = "Markdown") -> bool:
@@ -200,6 +210,11 @@ async def webhook_handler(request: Request, background_tasks: BackgroundTasks):
     # 콘솔 로그
     print(f"\n[{msg_info['date']}] {msg_info['from_name']}: {text}")
 
+    # 즉시 타이핑 표시 (await로 직접 호출)
+    chat_id = chat.get("id")
+    print(f"[webhook] 타이핑 표시 시도: chat_id={chat_id}")
+    await send_chat_action(chat_id, "typing")
+
     # 백그라운드에서 처리 (즉시 응답 반환)
     background_tasks.add_task(process_message, msg_info)
 
@@ -214,10 +229,21 @@ async def health_check():
 
 # ===== OpenCode 핸들러 =====
 
+async def keep_typing(chat_id: int, stop_event: asyncio.Event):
+    """OpenCode 실행 중 타이핑 표시 유지 (4초마다)"""
+    while not stop_event.is_set():
+        await send_chat_action(chat_id, "typing")
+        try:
+            await asyncio.wait_for(stop_event.wait(), timeout=4.0)
+        except asyncio.TimeoutError:
+            pass  # 4초 후 다시 typing 전송
+
+
 @on_message
 async def opencode_handler(msg: dict) -> Optional[str]:
     """OpenCode로 /user-action 실행"""
     text = msg.get("text", "")
+    chat_id = msg.get("chat_id")
 
     # 빈 메시지 무시
     if not text:
@@ -232,6 +258,10 @@ async def opencode_handler(msg: dict) -> Optional[str]:
 
     # 일반 메시지 → OpenCode 실행
     print(f"\n>>> OpenCode 실행: /user-action")
+
+    # 타이핑 표시 시작
+    stop_typing = asyncio.Event()
+    typing_task = asyncio.create_task(keep_typing(chat_id, stop_typing))
 
     try:
         process = await asyncio.create_subprocess_exec(
@@ -255,6 +285,14 @@ async def opencode_handler(msg: dict) -> Optional[str]:
         print(">>> OpenCode 타임아웃")
     except Exception as e:
         print(f">>> OpenCode 실행 실패: {e}")
+    finally:
+        # 타이핑 표시 중지
+        stop_typing.set()
+        typing_task.cancel()
+        try:
+            await typing_task
+        except asyncio.CancelledError:
+            pass
 
     # OpenCode가 직접 send_telegram.py로 응답하므로 여기선 None 반환
     return None
