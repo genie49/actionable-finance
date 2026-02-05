@@ -11,6 +11,7 @@ dependencies = [
     "uvicorn>=0.32.0",
     "telethon>=1.37.0",
     "pyupbit>=0.2.33",
+    "python-binance>=1.0.19",
     "apscheduler>=3.10.0",
     "mplfinance>=0.12.9",
     "pandas>=2.0.0",
