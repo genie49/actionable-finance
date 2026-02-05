@@ -45,7 +45,8 @@ description: |
 | `get_price.py` | 현재가 조회 |
 | `get_orderbook.py` | 호가창 조회 |
 | `get_ohlcv.py` | 일봉/분봉 데이터 조회 |
-| `search_stock.py` | 종목 검색 |
+| `search_stock.py` | 종목/ETF/지수 통합 검색 |
+| `get_index.py` | 주요 지수 현재가 조회 |
 
 ### 자산 및 주문
 
@@ -84,19 +85,34 @@ uv run python .opencode/skills/kis-trading/scripts/get_ohlcv.py 005930 --period 
 uv run python .opencode/skills/kis-trading/scripts/get_ohlcv.py 005930 --period M --count 60
 ```
 
-### 종목 검색 (KRX 전체 2,800+ 종목)
+### 종목/ETF/지수 통합 검색
 
 ```bash
-# 종목명 검색
+# 종목명 검색 (주식 + ETF + 지수)
 uv run python .opencode/skills/kis-trading/scripts/search_stock.py 삼성전자
-uv run python .opencode/skills/kis-trading/scripts/search_stock.py 더본코리아
-uv run python .opencode/skills/kis-trading/scripts/search_stock.py 에코프로
+uv run python .opencode/skills/kis-trading/scripts/search_stock.py 코스피
+uv run python .opencode/skills/kis-trading/scripts/search_stock.py 나스닥
+
+# 유형별 검색
+uv run python .opencode/skills/kis-trading/scripts/search_stock.py 코스피 --type etf    # ETF만
+uv run python .opencode/skills/kis-trading/scripts/search_stock.py 코스피 --type stock  # 주식만
+uv run python .opencode/skills/kis-trading/scripts/search_stock.py 나스닥 --type index  # 지수만
 
 # 결과 수 제한
-uv run python .opencode/skills/kis-trading/scripts/search_stock.py 한화 --limit 5
+uv run python .opencode/skills/kis-trading/scripts/search_stock.py s&p500 --limit 10
+```
 
-# 캐시 새로고침 (24시간 자동 갱신)
-uv run python .opencode/skills/kis-trading/scripts/search_stock.py 삼성 --refresh
+### 주요 지수 현재가 조회
+
+```bash
+# 기본 5개 지수 (코스피, 코스닥, 다우, 나스닥, S&P500)
+uv run python .opencode/skills/kis-trading/scripts/get_index.py
+
+# 특정 지수만
+uv run python .opencode/skills/kis-trading/scripts/get_index.py kospi nasdaq
+
+# 모든 지수
+uv run python .opencode/skills/kis-trading/scripts/get_index.py --all
 ```
 
 ### 잔고 조회
