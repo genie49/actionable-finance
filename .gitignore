@@ -25,3 +25,6 @@ venv/
 # Collected messages (keep folder, ignore content)
 collected_messages/*.md
 .serena/
+
+# KRX stock cache
+.opencode/skills/kis-trading/scripts/.cache/
